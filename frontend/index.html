@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abi-Feier</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div>
+        <h1>Abi-Feier - Streaming</h1>
+        <h2><a href="" id="vlc-header"></a></h2>
+        <h2><a href="/client.html" id="hls-header">Streaming Client im Browser</a></h2>
+    </div>
+</body>
+
+<script>
+    fetch("/meta.json").then(response => response.json()).then(data => {
+        rtmp_link = "rtmp://" + data.address + "/" + data.path + "/" + data.key;
+        document.getElementById("vlc-header").innerText = rtmp_link;
+        document.getElementById("vlc-header").href = rtmp_link;
+        document.getElementById("hls-header").innerText = hls_link;
+        document.getElementById("hls-header").hidden = !data.hls;
+    })
+</script>
+
+</html>

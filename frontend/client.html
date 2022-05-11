@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <video id="video"></video>
+    <script>
+        fetch("/meta.json").then(response => response.json()).then(data => {
+            var video = document.getElementById('video');
+            var stream_url = "/hls/" + data.key + ".m3u8"
+
+            if(Hls.isSupported()) {
+                var hls = new Hls();
+                hls.loadSource(stream_url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED,function() {
+                    //video.play();
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = stream_url;
+                video.addEventListener('loadedmetadata',function() {
+                    video.play();
+                });
+            }
+        })
+    </script>
+    <button onclick="video.play()">asd</button>
+</body>
+</html>
