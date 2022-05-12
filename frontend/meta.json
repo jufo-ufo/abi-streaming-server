@@ -1,7 +1,7 @@
 {
     "address" : "0.0.0.0",
     "path" : "live",
-    "key" : "test",
+    "key" : "abi",
     "hls" : true,
     "online" : true
 }
