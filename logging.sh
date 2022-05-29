@@ -1,10 +1,12 @@
-#!/bin/bash
+##!/bin/bash
 
 R1=`cat /sys/class/net/$1/statistics/rx_bytes`
 T1=`cat /sys/class/net/$1/statistics/tx_bytes`
+time=$(($(date +%s%N)/1000000))
+f=`echo "log_${time}.csv"`
 
-echo "" >> log_1.txt
-echo "date, CPU%, Temp°, Mem%, Net_in(rx), Net_out(tx)" >> log_1.txt
+echo "" >> $f
+echo "date, CPU%, Temp°, Mem%, Net_in(rx), Net_out(tx)" >> $f
 
 while true
 do
@@ -17,7 +19,7 @@ do
 	Mem_per=`free -m | awk 'NR==2{printf "%.2f", $3*100/$2}'`
 	time=$(date "+%Y-%m-%d %H:%M:%S")
 	temp=`sensors -j coretemp-isa-0000 | jq -r  '.["coretemp-isa-0000"] | .["Package id 0"] | .["temp1_input"]'`
-	echo "${time}, ${CPU_usage}, ${temp}, ${Mem_per}, ${Net_in}, ${Net_out}" >> log_1.txt
+	echo "${time}, ${CPU_usage}, ${temp}, ${Mem_per}, ${Net_in}, ${Net_out}" >> $f
 	R1=$R2
 	T1=$T2
 	wait
