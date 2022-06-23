@@ -59,7 +59,7 @@ def animate(i):
 
     plt.subplot(2, 3, 6)
     plt.cla()
-    plt.ylim(0, 20)
+    plt.ylim(0, 50)
     plt.plot(x, data[" clients"], label='Clients', linewidth=1, color="darkred")
     plt.legend(loc='upper left')
 
