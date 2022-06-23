@@ -50,16 +50,16 @@ def animate(i):
     plt.plot(x, data[" Temp°"], label='Temp in °C', linewidth=1, color="darkred")
     plt.legend(loc='upper left')
 
-    plt.subplot(2, 3, 5)
-    plt.cla()
-    plt.grid()
-    plt.plot(x, data[" Server_out(tx)"], label='Nginx TX in kB/s', linewidth=0.75, color="darkorange")
-    plt.plot(x, data[" Server_in(rx)"], label='Nginx RX in kB/s', linewidth=0.75, color="royalblue")
-    plt.legend(loc='upper left')
+    #plt.subplot(2, 3, 5)
+    #plt.cla()
+    #plt.grid()
+    #plt.plot(x, data[" Server_out(tx)"], label='Nginx TX in kB/s', linewidth=0.75, color="darkorange")
+    #plt.plot(x, data[" Server_in(rx)"], label='Nginx RX in kB/s', linewidth=0.75, color="royalblue")
+    #plt.legend(loc='upper left')
 
     plt.subplot(2, 3, 6)
     plt.cla()
-    plt.ylim(0, 200)
+    plt.ylim(0, 20)
     plt.plot(x, data[" clients"], label='Clients', linewidth=1, color="darkred")
     plt.legend(loc='upper left')
 
