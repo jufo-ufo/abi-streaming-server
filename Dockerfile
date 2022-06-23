@@ -20,9 +20,9 @@ RUN make
 RUN make install
 
 # Copying config and setting up files
-COPY etc/nginx/* /etc/nginx/
+#COPY nginx.conf /etc/nginx/
 RUN mkdir /var/log/nginx
-
+RUN mkdir /video
 RUN /usr/local/nginx/sbin/nginx -t
 
 # Finish up

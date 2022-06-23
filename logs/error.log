@@ -143,3 +143,38 @@
 2022/05/12 15:05:24 [error] 7#0: *2 open() "/usr/share/nginx/html/favicon.ico" failed (2: No such file or directory), client: 127.0.0.1, server: , request: "GET /favicon.ico HTTP/1.1", host: "localhost:8080", referrer: "http://localhost:8080/client.html"
 2022/05/12 15:28:19 [error] 7#0: *2 open() "/usr/share/nginx/html/favicon.ico" failed (2: No such file or directory), client: 127.0.0.1, server: , request: "GET /favicon.ico HTTP/1.1", host: "localhost:8080", referrer: "http://localhost:8080/client.html"
 2022/05/12 15:37:28 [error] 8#0: *2 open() "/usr/share/nginx/html/favicon.ico" failed (2: No such file or directory), client: 127.0.0.1, server: , request: "GET /favicon.ico HTTP/1.1", host: "localhost:8080", referrer: "http://localhost:8080/client.html"
+2022/06/23 05:27:45 [crit] 7#0: *1 record: rec failed to open file '/video//test.mp4' (13: Permission denied), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:27:45 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:27:45 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:27:49 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:27:53 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:27:57 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:01 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:05 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:10 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:14 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:18 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:22 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:23 [error] 7#0: *3 open() "/usr/local/nginx/html/controll" failed (2: No such file or directory), client: 172.18.0.1, server: , request: "GET /controll HTTP/1.1", host: "localhost:8080"
+2022/06/23 05:28:23 [error] 7#0: *3 open() "/usr/share/nginx/html/favicon.ico" failed (2: No such file or directory), client: 172.18.0.1, server: , request: "GET /favicon.ico HTTP/1.1", host: "localhost:8080", referrer: "http://localhost:8080/controll"
+2022/06/23 05:28:26 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:30 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:35 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:39 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:39 [error] 7#0: *3 open() "/usr/local/nginx/html/controll" failed (2: No such file or directory), client: 172.18.0.1, server: , request: "GET /controll HTTP/1.1", host: "localhost:8080"
+2022/06/23 05:28:43 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:47 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:51 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:28:55 [error] 7#0: *3 open() "/root/nginx-rtmp-module-dev/stat.xsl/stat.xsl" failed (13: Permission denied), client: 172.18.0.1, server: , request: "GET /stat.xsl HTTP/1.1", host: "localhost:8080", referrer: "http://localhost:8080/stat"
+2022/06/23 05:28:55 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:29:00 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:29:04 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:29:08 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:29:09 [error] 7#0: *3 open() "/root/nginx-rtmp-module-dev/stat.xsl/stat.xsl" failed (13: Permission denied), client: 172.18.0.1, server: , request: "GET /stat.xsl HTTP/1.1", host: "localhost:8080"
+2022/06/23 05:29:12 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:29:16 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 05:29:20 [crit] 7#0: *1 pwrite() "recorded" failed (9: Bad file descriptor), client: 172.18.0.1, server: 0.0.0.0:1935
+2022/06/23 06:02:52 [error] 7#0: *1 open() "/usr/local/nginx/html/controll" failed (2: No such file or directory), client: 172.18.0.1, server: , request: "GET /controll HTTP/1.1", host: "localhost:8080"
+2022/06/23 06:02:52 [error] 7#0: *1 open() "/usr/share/nginx/html/favicon.ico" failed (2: No such file or directory), client: 172.18.0.1, server: , request: "GET /favicon.ico HTTP/1.1", host: "localhost:8080", referrer: "http://localhost:8080/controll"
+2022/06/23 06:03:15 [error] 7#0: *1 open() "/usr/local/nginx/html/controll" failed (2: No such file or directory), client: 172.18.0.1, server: , request: "GET /controll HTTP/1.1", host: "localhost:8080"
+2022/06/23 06:25:20 [error] 7#0: *1 open() "/root/nginx-rtmp-module-dev/stat.xsl/stat.xsl" failed (13: Permission denied), client: 172.18.0.1, server: , request: "GET /stat.xsl HTTP/1.1", host: "localhost:8080", referrer: "http://localhost:8080/stats.xml"

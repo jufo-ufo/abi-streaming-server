@@ -19,7 +19,9 @@ do
 	Mem_per=`free -m | awk 'NR==2{printf "%.2f", $3*100/$2}'`
 	time=$(date "+%Y-%m-%d %H:%M:%S")
 	temp=`sensors -j coretemp-isa-0000 | jq -r  '.["coretemp-isa-0000"] | .["Package id 0"] | .["temp1_input"]'`
-	echo "${time}, ${CPU_usage}, ${temp}, ${Mem_per}, ${Net_in}, ${Net_out}" >> $f
+	Server_info=``
+	
+	echo "${time}, ${CPU_usage}, ${temp}, ${Mem_per}, ${Net_in}, ${Net_out}, ${Server_info}" >> $f
 	R1=$R2
 	T1=$T2
 	wait

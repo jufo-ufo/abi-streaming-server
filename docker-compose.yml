@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  nginx:
+    build: .
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+      - "./frontend:/usr/share/nginx/html/"
+      - "./logs:/var/log/nginx/"
+      - "./video:/video"
+      - "./stats:/root/nginx-rtmp-module-dev/stat.xsl/"
+    restart: always
+    ports:
+      - "8080:8080"
+      - "1935:1935"
+
+  potainer:
+    image: portainer/portainer-ce:2.9.3
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "portainer_data:/data"
+    restart: always
+    ports:
+      - "9443:9443"
+
+volumes:
+  portainer_data:

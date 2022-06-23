@@ -1,19 +1,27 @@
+
+import sys
+import requests
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 import pandas as pd
 import sys
+import time
 
 x_vals = []
 y_vals = []
 
 def animate(i):
-    data = pd.read_csv(sys.argv[1])
+    try:
+        data = pd.read_csv(sys.argv[1])
+    except:
+        print("Invalid first argument (logfile), exiting...")
+        exit()
     data["date"] = pd.to_datetime(data["date"])
 
     x = data["date"]
 
     plt.tight_layout()
-    
+
     plt.subplot(2, 2, 1)
     plt.cla()
     plt.grid()
