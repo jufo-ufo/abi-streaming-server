@@ -1,12 +1,13 @@
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 import pandas as pd
+import sys
 
 x_vals = []
 y_vals = []
 
 def animate(i):
-    data = pd.read_csv('log_1.txt')
+    data = pd.read_csv(sys.argv[1])
     data["date"] = pd.to_datetime(data["date"])
 
     x = data["date"]
@@ -49,5 +50,5 @@ ani = FuncAnimation(plt.gcf(), animate, interval=500)
 #animate(0)
 
 mng = plt.get_current_fig_manager()
-mng.window.showMaximized()
+#mng.window.showMaximized()
 plt.show()
