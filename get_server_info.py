@@ -4,8 +4,11 @@ import xmltodict, json
 
 r = requests.get("http://localhost:8080/stats.xml")
 
-data = xmltodict.parse('<e> <a>text</a> <a>text</a> </e>')
+data = xmltodict.parse(r.text)
 
-print(data)
+client = int(data["rtmp"]["server"]["application"]["live"]["nclients"])
+uptime = int(data["rtmp"]["uptime"])
+bytes_out = int(data["rtmp"]["bytes_out"])
+bytes_in = int(data["rtmp"]["bytes_in"])
 
-print(client)
+print(f"{client}, {uptime}, {bytes_in}, {bytes_out}", end="\r")
