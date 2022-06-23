@@ -11,4 +11,4 @@ uptime = int(data["rtmp"]["uptime"])
 bytes_out = int(data["rtmp"]["bytes_out"])
 bytes_in = int(data["rtmp"]["bytes_in"])
 
-print(f"{client}, {uptime}, {bytes_in}, {bytes_out}", end="")
+print(f"{client}, {bytes_in}, {bytes_out}", end="")
