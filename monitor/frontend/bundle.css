@@ -1,0 +1,11 @@
+main.svelte-1q5iy29 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+h1.svelte-shts51 {
+  font-size: 24px;
+  margin: 0;
+}
