@@ -13,14 +13,24 @@ services:
       - "8080:8080"
       - "1935:1935"
 
-  potainer:
-    image: portainer/portainer-ce:2.9.3
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "portainer_data:/data"
+  monitor:
+    build: monitor
     restart: always
     ports:
-      - "9443:9443"
+      - "8081:8081"
+    links:
+      - logging_database:database
+
+  logging_database:
+    image: timescale/timescaledb:latest-pg14
+    volumes:
+      - "./monitor/database:/docker-entrypoint-initdb.d"
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=logging
+    ports:
+      - "5432:5432"
 
 volumes:
   portainer_data:
