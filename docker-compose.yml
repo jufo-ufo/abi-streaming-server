@@ -14,7 +14,7 @@ services:
       - "1935:1935"
 
   monitor:
-    build: monitor
+    build: monitor/backend
     restart: always
     ports:
       - "8081:8081"
