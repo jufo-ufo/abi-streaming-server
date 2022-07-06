@@ -5,7 +5,7 @@ import psutil
 import threading
 import signal
 import datetime
-from typing import Tuple, List, Literal, Dict
+from typing import Tuple, List, Dict
 
 # Global Variables for Config Stuff
 OS = "win" if os.name == "nt" else "unix"
@@ -49,54 +49,42 @@ def connect_to_db():
 
 def push_to_backlog(s):
     if len(BACKLOG) < BACKLOG_MAX_SIZE:
-        BACKLOG.append(new_sample)
+        BACKLOG.append(s)
     else:
         print("!WARNING! Dropped Sample because of overflowing Backlog")
 
 
 # Reads Disk info in the following manner: disk_info, io_counts_write, ic_counts_read
-# TODO Refactor the Dict struct in something easy with lists
-def get_disk_info() -> Tuple[Dict, Dict, Dict, Dict]:
+def get_disk_info() -> Tuple[Dict, List, List, List]:
     disk_info = {
-        i.device: (i.mountpoint, i.fstype, psutil.disk_usage(i.mountpoint).total)
-        for i in psutil.disk_partitions(all=False) if i.fstype != "squashfs"
+        disk.device: (disk.mountpoint, disk.fstype, psutil.disk_usage(disk.mountpoint).total)
+        for disk in psutil.disk_partitions(all=False) if disk.fstype != "squashfs"
     }
     disk_io_counts = psutil.disk_io_counters(perdisk=True, nowrap=True)
-    return disk_info, {
-            i: psutil.disk_usage(j[0]).percent for i, j in disk_info.items()
-        }, {
-            i: disk_io_counts[
-                i.replace("/dev/", "") if OS == "unix" else i
-            ].write_bytes
-            for i, j in disk_info.items()
-        }, {
-            i: disk_io_counts[
-                i.replace("/dev/", "") if OS == "unix" else i
-            ].read_bytes
-            for i, j in disk_info.items()
-        }
+    return disk_info, \
+        [psutil.disk_usage(v[0]).percent for _, v in disk_info.items()], \
+        [disk_io_counts[k.replace("/dev/", "") if OS == "unix" else k].write_bytes for k, _ in disk_info.items()], \
+        [disk_io_counts[k.replace("/dev/", "") if OS == "unix" else k].read_bytes for k, _ in disk_info.items()]
 
 
 # Reads Network info in the following manner: network_info, bytes_send, bytes_recv
-def get_network_info() -> Tuple[Dict, Dict, Dict]:
+def get_network_info() -> Tuple[Dict, List, List, List]:
     network_state = psutil.net_if_stats()
     network_info = {
-        i: (network_state[i].isup, j[0].address, j[1].address)
-        for i, j in psutil.net_if_addrs().items() if i[:3] != "br-" and i[:4] != "veth"
+        network_name: (j[0].address, j[1].address)
+        for network_name, j in psutil.net_if_addrs().items()
+        if network_name[:3] != "br-" and network_name[:4] != "veth"
     }
     network_io_counts = psutil.net_io_counters(pernic=True, nowrap=True)
-    return network_info, {
-        i: network_io_counts[i].bytes_sent
-        for i in network_info.keys()
-    }, {
-        i: network_io_counts[i].bytes_recv
-        for i in network_info.keys()
-    }
+    return network_info, \
+        [network_state[network_name].isup for network_name in network_info.keys()], \
+        [network_io_counts[network_name].bytes_sent for network_name in network_info.keys()], \
+        [network_io_counts[network_name].bytes_recv for network_name in network_info.keys()]
 
 
 # Getting Initial Values for measurement
 init_disk_info, init_disk_usage, init_disk_writs, init_disk_reads = get_disk_info()
-init_network_info, init_network_sent, init_network_recv = get_network_info()
+init_network_info, _, init_network_sent, init_network_recv = get_network_info()
 
 
 # Class for holding information about a taken Sample
@@ -114,16 +102,20 @@ class Sample:
     swap_used: float
 
     disk_info: dict[str, tuple[str, str, int]]
-    disk_usage: dict[str, float]
-    disk_reads: dict[str, float]
-    disk_writs: dict[str, float]
+    disk_usage: List[float]
+    disk_reads: List[float]
+    disk_writs: List[float]
 
-    network_info: dict[str, bool]
-    network_tx: dict[str, float]
-    network_rx: dict[str, float]
+    network_addresses: Dict[str, bool]
+    network_status: List[bool]
+    network_tx: List[float]
+    network_rx: List[float]
 
-    temp: dict[str, float]
-    fan: dict[str, float]
+    temp_names: List[str]
+    temp: List[float]
+    fan_names: List[str]
+    fan: List[float]
+
     battery: float
 
     def get_sample(self):
@@ -142,7 +134,7 @@ class Sample:
         cpu_usage_total_thread.start()
 
         self.disk_info, self.disk_usage, self.disk_writs, self.disk_reads = get_disk_info()
-        self.network_info, self.network_tx, self.network_rx = get_network_info()
+        self.network_addresses, self.network_status, self.network_tx, self.network_rx = get_network_info()
 
         global init_disk_writs
         global init_disk_reads
@@ -158,13 +150,13 @@ class Sample:
         init_network_sent = self.network_tx.copy()
         init_network_recv = self.network_rx.copy()
 
-        for i in init_disk_info.keys():
+        for i, _ in enumerate(init_disk_writs):
             self.disk_writs[i] = (self.disk_writs[i]-old_init_disk_writs[i]) / MEASURE_INTERVAL / 1024 / 2
             self.disk_reads[i] = (self.disk_reads[i]-old_init_disk_reads[i]) / MEASURE_INTERVAL / 1024 / 2
 
-        for i in init_network_info.keys():
-            self.network_tx[i] = (self.network_tx[i] - old_init_network_sent[i]) / MEASURE_INTERVAL / 1024 / 2
-            self.network_rx[i] = (self.network_rx[i] - old_init_network_recv[i]) / MEASURE_INTERVAL / 1024 / 2
+        for i, _ in enumerate(init_network_sent):
+            self.network_tx[i] = (self.network_tx[i]-old_init_network_sent[i]) / MEASURE_INTERVAL / 1024 / 2
+            self.network_rx[i] = (self.network_rx[i]-old_init_network_recv[i]) / MEASURE_INTERVAL / 1024 / 2
 
         self.cpu_freq_total = psutil.cpu_freq(percpu=False).current
         self.cpu_freq_per_core = [i.current for i in psutil.cpu_freq(percpu=True)]
@@ -174,19 +166,20 @@ class Sample:
         self.swap_total = psutil.swap_memory().total
         self.swap_used = psutil.swap_memory().percent
 
-        self.temp = {}
-        for i, j in psutil.sensors_temperatures(fahrenheit=False).items():
-            for n, k in enumerate(j):
-                self.temp.update({
-                    f"{i}-{n}{'-'+k.label if k.label != '' else ''}": k.current
-                })
+        self.temp = []
+        self.temp_names = []
+        self.fan = []
+        self.fan_names = []
 
-        self.fan = {}
-        for i, j in psutil.sensors_fans().items():
-            for n, k in enumerate(j):
-                self.fan.update({
-                    f"{i}-{n}{'-'+k.label if k.label != '' else ''}": k.current
-                })
+        for v, k1 in psutil.sensors_temperatures(fahrenheit=False).items():
+            for n, k2 in enumerate(k1):
+                self.temp.append(k2.current)
+                self.temp_names.append(f"{v}-{n}{'-'+k2.label if k2.label != '' else ''}")
+
+        for v, k1 in psutil.sensors_fans().items():
+            for n, k2 in enumerate(k1):
+                self.fan.append(k2.current)
+                self.fan_names.append(f"{v}-{n}{'-'+k2.label if k2.label != '' else ''}")
 
         battery = psutil.sensors_battery()
         self.battery = battery.percent if battery is not None else 1
@@ -201,21 +194,16 @@ class Sample:
             INSERT INTO probe_entries (
             log_session, probe, timestamp, 
             cpu_usage_total, cpu_freq_total, cpu_usage_per_core, cpu_freq_per_core,
-            battery,
-            memory_used, swap_used, disk_usage, disk_reads, disk_writs,
+            memory_used, swap_used, battery,
+            disk_usage, disk_reads, disk_writs,
             network_online, network_rx, network_tx, temp, fan
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-            """, (  # TODO: This looks horible: Refractor into lists
+            """, (
                 LOGGING_SESSION_ID, PROBE_ID, datetime.datetime.fromtimestamp(self.timestamp),
                 self.cpu_usage_total, self.cpu_freq_total, self.cpu_usage_per_core, self.cpu_freq_per_core,
                 self.memory_used, self.swap_used, self.battery,
-                list(self.disk_usage.values()), list(self.disk_reads.values()),
-                list(self.disk_writs.values()),
-                [i[0] for i in self.network_info.values()],
-                list(self.network_rx.values()),
-                list(self.network_tx.values()),
-                list(self.temp.values()),
-                list(self.fan.values())
+                self.disk_usage, self.disk_reads, self.disk_writs,
+                self.network_status, self.network_rx, self.network_tx, self.temp, self.fan
             ))
             conn.commit()
         except (psycopg2.OperationalError, psycopg2.InterfaceError):
@@ -228,9 +216,15 @@ class Sample:
         cur: psycopg2._psycopg.cursor = conn.cursor()
         cur.execute("""
         UPDATE probes
-        SET memory_total = %s, swap_total = %s, cpu_cors = %s,
-        disks_names = %s, disks_fstype = %s, disks_mountpoint = %s, disks_size = %s,
-        network_names = %s, ipv4 = %s, ipv6 = %s, temp_sensor_names = %s, fan_names = %s
+        SET 
+        memory_total = %s, swap_total = %s, cpu_cors = %s,
+        disks_names = %s, 
+        disks_fstype = %s, 
+        disks_mountpoint = %s, 
+        disks_size = %s,
+        network_names = %s, 
+        ipv4 = %s, ipv6 = %s, 
+        temp_sensor_names = %s, fan_names = %s
         WHERE id = %s;
         """, (
             self.memory_total, self.swap_total, len(self.cpu_usage_per_core),
@@ -238,10 +232,9 @@ class Sample:
             [self.disk_info[i][0] for i in self.disk_info.keys()],
             [self.disk_info[i][1] for i in self.disk_info.keys()],
             [self.disk_info[i][2] for i in self.disk_info.keys()],
-            list(self.network_info.keys()),
-            [i[1] for i in self.network_info.values()],
-            [i[2] for i in self.network_info.values()],
-            list(self.temp.keys()), list(self.fan.keys()),
+            list(self.network_addresses.keys()),
+            [addr[0] for addr in self.network_addresses], [addr[1] for addr in self.network_addresses],
+            self.temp_names, self.fan_names,
             PROBE_ID
         ))
 
@@ -278,11 +271,11 @@ while True:
         cursor = db_conn.cursor()
         if len(BACKLOG) > 0:  # If any old backlog exists, it will be popped of her
             BACKLOG.append(new_sample)
-            for i in range(min(len(BACKLOG), 5)):
+            for _ in range(min(len(BACKLOG), 5)):
                 sample = BACKLOG[0]
                 BACKLOG = BACKLOG[1:]
                 sample.write_to_db(db_conn)
-            print(f"Poping of backlog: {len(BACKLOG)}/{BACKLOG_MAX_SIZE} Samples in backlog")
+            print(f"Popping of backlog: {len(BACKLOG)}/{BACKLOG_MAX_SIZE} Samples in backlog")
         else:
             # Usually the Sample is writen directly to database
             new_sample.write_to_db(db_conn)
@@ -297,4 +290,4 @@ while True:
         print("!WARNING! Measure interval is not meet!")
     else:
         time.sleep(MEASURE_INTERVAL - round(delta_time, 1))
-    #print(time.time()-start)
+    print(time.time()-start)
