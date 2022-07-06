@@ -42,16 +42,16 @@ CREATE TABLE probe_entries (
     cpu_usage_per_core real[32],
     cpu_freq_per_core real[32],
 
-    disk_usage real[32],
-    disk_reads real[32],
-    disk_writs real[32],
+    disk_usage real[16],
+    disk_reads real[16],
+    disk_writs real[16],
 
-    network_online bool[32],
-    network_rx real[32],
-    network_tx real[32],
+    network_online bool[16],
+    network_rx real[16],
+    network_tx real[16],
 
     temp real[64],
-    fan real[64],
+    fan real[16],
 
     memory_used real,
     swap_used real,
