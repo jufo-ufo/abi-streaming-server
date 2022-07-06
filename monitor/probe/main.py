@@ -5,13 +5,17 @@ import psutil
 import threading
 import signal
 import datetime
+from typing import Tuple, List, Literal, Dict
 
+# Global Variables for Config Stuff
 OS = "win" if os.name == "nt" else "unix"
 
 MEASURE_INTERVAL = 1
 
 BACKLOG_MAX_SIZE = 1000
 BACKLOG = []
+
+DB_CONNECTION_ALIVE = True
 
 LOGGING_SESSION_ID = 0
 PROBE_ID = 0
@@ -22,7 +26,9 @@ DATABASE_PASSWORD = "password"
 DATABASE_HOST = "localhost"
 DATABASE_PORT = 5432
 
+# Connecting to database
 db_conn: psycopg2._psycopg.connection = None
+# Creating signal handlers for SIGINT, SIGTERM to close db connection proper
 signal.signal(signal.SIGINT, lambda: db_conn.close())
 signal.signal(signal.SIGTERM, lambda: db_conn.close())
 
@@ -37,9 +43,7 @@ def connect_to_db():
             host=DATABASE_HOST,
             port=DATABASE_PORT
         )
-    except psycopg2.InterfaceError:
-        pass
-    except psycopg2.OperationalError:
+    except (psycopg2.InterfaceError, psycopg2.OperationalError):
         pass
 
 
@@ -50,7 +54,9 @@ def push_to_backlog(s):
         print("!WARNING! Dropped Sample because of overflowing Backlog")
 
 
-def get_disk_info():
+# Reads Disk info in the following manner: disk_info, io_counts_write, ic_counts_read
+# TODO Refactor the Dict struct in something easy with lists
+def get_disk_info() -> Tuple[Dict, Dict, Dict, Dict]:
     disk_info = {
         i.device: (i.mountpoint, i.fstype, psutil.disk_usage(i.mountpoint).total)
         for i in psutil.disk_partitions(all=False) if i.fstype != "squashfs"
@@ -71,7 +77,8 @@ def get_disk_info():
         }
 
 
-def get_network_info():
+# Reads Network info in the following manner: network_info, bytes_send, bytes_recv
+def get_network_info() -> Tuple[Dict, Dict, Dict]:
     network_state = psutil.net_if_stats()
     network_info = {
         i: (network_state[i].isup, j[0].address, j[1].address)
@@ -87,10 +94,12 @@ def get_network_info():
     }
 
 
+# Getting Initial Values for measurement
 init_disk_info, init_disk_usage, init_disk_writs, init_disk_reads = get_disk_info()
 init_network_info, init_network_sent, init_network_recv = get_network_info()
 
 
+# Class for holding information about a taken Sample
 class Sample:
     timestamp: float
 
@@ -196,7 +205,7 @@ class Sample:
             memory_used, swap_used, disk_usage, disk_reads, disk_writs,
             network_online, network_rx, network_tx, temp, fan
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-            """, (
+            """, (  # TODO: This looks horible: Refractor into lists
                 LOGGING_SESSION_ID, PROBE_ID, datetime.datetime.fromtimestamp(self.timestamp),
                 self.cpu_usage_total, self.cpu_freq_total, self.cpu_usage_per_core, self.cpu_freq_per_core,
                 self.memory_used, self.swap_used, self.battery,
@@ -210,8 +219,11 @@ class Sample:
             ))
             conn.commit()
         except (psycopg2.OperationalError, psycopg2.InterfaceError):
+            global DB_CONNECTION_ALIVE
+            DB_CONNECTION_ALIVE = False
             push_to_backlog(self)
 
+    # This for initially setting all of static values that do not change like cpu core count
     def initial_write_to_db(self, conn: psycopg2._psycopg.connection):
         cur: psycopg2._psycopg.cursor = conn.cursor()
         cur.execute("""
@@ -236,10 +248,13 @@ class Sample:
 
 connect_to_db()
 
+# Taking the first sample to get initial values and setting timing for network and disk
 new_sample = Sample()
 new_sample.get_sample()
 new_sample.initial_write_to_db(db_conn)
+time.sleep(MEASURE_INTERVAL)
 
+# Creating Thread-object, for handling reconnecting stuff
 reconnection_thread = threading.Thread(target=connect_to_db, daemon=True)
 
 while True:
@@ -247,18 +262,21 @@ while True:
     new_sample = Sample()
     new_sample.get_sample()
 
-    connection_working = True
+    # Testing DB_Connection with simple query
     try:
-        db_conn.cursor().execute("SELECT 1 WHERE 1 = 1")
+        if not DB_CONNECTION_ALIVE:  # ...but only if any db write failed
+            db_conn.cursor().execute("SELECT 1 WHERE 1 = 1")
+            DB_CONNECTION_ALIVE = True
     except (psycopg2.OperationalError, psycopg2.InterfaceError):
-        connection_working = False
+        DB_CONNECTION_ALIVE = False
+        # And if the connection is not working and the reconnection Thread isn't stated...
         if not reconnection_thread.is_alive():
             reconnection_thread = threading.Thread(target=connect_to_db, daemon=True)
-            reconnection_thread.start()
+            reconnection_thread.start()  # ...start the little bugger up and hope for the best!
 
-    if connection_working:
+    if DB_CONNECTION_ALIVE:
         cursor = db_conn.cursor()
-        if len(BACKLOG) > 0:
+        if len(BACKLOG) > 0:  # If any old backlog exists, it will be popped of her
             BACKLOG.append(new_sample)
             for i in range(min(len(BACKLOG), 5)):
                 sample = BACKLOG[0]
@@ -266,14 +284,17 @@ while True:
                 sample.write_to_db(db_conn)
             print(f"Poping of backlog: {len(BACKLOG)}/{BACKLOG_MAX_SIZE} Samples in backlog")
         else:
+            # Usually the Sample is writen directly to database
             new_sample.write_to_db(db_conn)
     else:
+        # Creating backlog if the connection is dead
         print(f"Connection Error; Building up backlog: {len(BACKLOG)}/{BACKLOG_MAX_SIZE} Samples in backlog")
         push_to_backlog(new_sample)
 
+    # Measuring passed time and sleeping accordingly to match the measure interval
     delta_time = time.time() - start
     if round(delta_time, 1) > MEASURE_INTERVAL:
         print("!WARNING! Measure interval is not meet!")
     else:
         time.sleep(MEASURE_INTERVAL - round(delta_time, 1))
-    print(time.time()-start)
+    #print(time.time()-start)
