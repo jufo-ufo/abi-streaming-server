@@ -1,9 +1,12 @@
 *.log
 log_1.txt
 
+.DS_Store
+
 **/__pycache__/*
 
 **/node_modules/*
+**/public/build*
 **/.vscode/*
 **/.idea/*
 

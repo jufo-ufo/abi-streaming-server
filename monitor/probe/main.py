@@ -99,7 +99,7 @@ class Sample:
     disk_reads: List[float]
     disk_writs: List[float]
 
-    network_addresses: Dict[str, bool]
+    network_addresses: Dict[str, Tuple[str, str]]
     network_status: List[bool]
     network_tx: List[float]
     network_rx: List[float]
@@ -206,30 +206,35 @@ class Sample:
 
     # This for initially setting all of static values that do not change like cpu core count
     def initial_write_to_db(self, conn: psycopg2._psycopg.connection):
-        cur: psycopg2._psycopg.cursor = conn.cursor()
-        cur.execute("""
-        UPDATE probes
-        SET 
-        memory_total = %s, swap_total = %s, cpu_cors = %s,
-        disks_names = %s, 
-        disks_fstype = %s, 
-        disks_mountpoint = %s, 
-        disks_size = %s,
-        network_names = %s, 
-        ipv4 = %s, ipv6 = %s, 
-        temp_sensor_names = %s, fan_names = %s
-        WHERE id = %s;
-        """, (
-            self.memory_total, self.swap_total, len(self.cpu_usage_per_core),
-            list(self.disk_info.keys()),
-            [self.disk_info[i][0] for i in self.disk_info.keys()],
-            [self.disk_info[i][1] for i in self.disk_info.keys()],
-            [self.disk_info[i][2] for i in self.disk_info.keys()],
-            list(self.network_addresses.keys()),
-            [addr[0] for addr in self.network_addresses], [addr[1] for addr in self.network_addresses],
-            self.temp_names, self.fan_names,
-            PROBE_ID
-        ))
+        try:
+            cur: psycopg2._psycopg.cursor = conn.cursor()
+            cur.execute("""
+            UPDATE probes
+            SET 
+            memory_total = %s, swap_total = %s, cpu_cors = %s,
+            disks_names = %s, 
+            disks_mountpoint = %s,
+            disks_fstype = %s,
+            disks_size = %s,
+            network_names = %s, 
+            ipv4 = %s, ipv6 = %s, 
+            temp_sensor_names = %s, fan_names = %s
+            WHERE id = %s;
+            """, (
+                self.memory_total, self.swap_total, len(self.cpu_usage_per_core),
+                list(self.disk_info.keys()),
+                [self.disk_info[i][0] for i in self.disk_info.keys()],
+                [self.disk_info[i][1] for i in self.disk_info.keys()],
+                [self.disk_info[i][2] for i in self.disk_info.keys()],
+                list(self.network_addresses.keys()),
+                [addr[0] for addr in self.network_addresses.values()], [addr[1] for addr in self.network_addresses.values()],
+                self.temp_names, self.fan_names,
+                PROBE_ID
+            ))
+            conn.commit()
+        except (psycopg2.OperationalError, psycopg2.InterfaceError):
+            global DB_CONNECTION_ALIVE
+            DB_CONNECTION_ALIVE = False
 
 
 connect_to_db()
@@ -238,6 +243,7 @@ connect_to_db()
 new_sample = Sample()
 new_sample.get_sample()
 new_sample.initial_write_to_db(db_conn)
+last_initial_write = time.time()
 time.sleep(config.MEASURE_INTERVAL)
 
 # Creating Thread-object, for handling reconnecting stuff
@@ -276,6 +282,11 @@ while True:
         # Creating backlog if the connection is dead
         print(f"Connection Error; Building up backlog: {len(BACKLOG)}/{config.BACKLOG_MAX_SIZE} Samples in backlog")
         push_to_backlog(new_sample)
+
+    if time.time() - last_initial_write > config.META_INFO_UPDATE_INTERVAL > 0 and DB_CONNECTION_ALIVE:
+        new_sample.initial_write_to_db(db_conn)
+        if DB_CONNECTION_ALIVE:
+            last_initial_write = time.time()
 
     # Measuring passed time and sleeping accordingly to match the measure interval
     delta_time = time.time() - start

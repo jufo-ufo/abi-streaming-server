@@ -2,18 +2,18 @@ import configparser
 from os import path
 import sys
 
-MEASURE_INTERVAL = 1
+MEASURE_INTERVAL = 0
 
-BACKLOG_MAX_SIZE = 1000
+BACKLOG_MAX_SIZE = 0
 
 LOGGING_SESSION_ID = 0
 PROBE_ID = 0
 
-DATABASE_NAME = "logging"
-DATABASE_USER = "postgres"
-DATABASE_HOST = "localhost"
-DATABASE_PORT = 5432
-DATABASE_PASSWORD = "password"
+DATABASE_NAME = ""
+DATABASE_USER = ""
+DATABASE_HOST = ""
+DATABASE_PORT = 0
+DATABASE_PASSWORD = ""
 
 CONFIG_FILE = "settings.ini"
 
@@ -40,5 +40,6 @@ if config.has_section("GENERAL"):
     MEASURE_INTERVAL = config["GENERAL"].getfloat("measure_interval", 1)
     LOGGING_SESSION_ID = config["GENERAL"].getfloat("logging_session_id")
     PROBE_ID = config["GENERAL"].getfloat("probe_id")
+    META_INFO_UPDATE_INTERVAL = config["GENERAL"].getfloat("meta_info_update", -1)
 else:
-    print("API section is config is missing", file=sys.stderr)
+    print("GENERAL section is config is missing", file=sys.stderr)
